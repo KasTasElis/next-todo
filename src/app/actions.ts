@@ -33,7 +33,11 @@ export const getTodos = async () => {
     .select()
     .eq("done", false);
 
-  return todos;
+  return todos?.sort((a, b) => {
+    const aTime = new Date(a.updated_at ?? a.created_at).getTime();
+    const bTime = new Date(b.updated_at ?? b.created_at).getTime();
+    return bTime - aTime;
+  });
 };
 
 export const getCompletedTodos = async () => {
@@ -45,24 +49,56 @@ export const getCompletedTodos = async () => {
     .select()
     .eq("done", true);
 
-  return todos;
+  return todos?.sort((a, b) => {
+    const aTime = new Date(a.updated_at ?? a.created_at).getTime();
+    const bTime = new Date(b.updated_at ?? b.created_at).getTime();
+    return bTime - aTime;
+  });
 };
 
 export const completeTodo = async (id: string) => {
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
+  const updatedAt = new Date().toISOString();
 
   const { error } = await supabase
     .from("todos")
-    .update({ done: true })
+    .update({ done: true, updated_at: updatedAt })
     .eq("id", id);
 
   if (error) {
     console.error("Completing todo failed: ", error);
-    // again, no type safety?
-    return { message: "Error happened: " + error, resetForm: false };
   }
 
   revalidatePath("/");
-  return { message: "Completed todo!", resetForm: true };
+};
+
+export const unCompleteTodo = async (id: string) => {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+  const updatedAt = new Date().toISOString();
+
+  const { error } = await supabase
+    .from("todos")
+    .update({ done: false, updated_at: updatedAt })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Undoing todo failed: ", error);
+  }
+
+  revalidatePath("/");
+};
+
+export const deleteTodo = async (id: string) => {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+
+  const { error } = await supabase.from("todos").delete().eq("id", id);
+
+  if (error) {
+    console.error("Delete todo failed: ", error);
+  }
+
+  revalidatePath("/");
 };
