@@ -1,9 +1,9 @@
 import DeleteTodoButton from "./DeleteTodoButton";
 import { AddTodoForm } from "./AddTodoForm";
 import { getCompletedTodos, getTodos } from "./actions";
-import { CompleteTodoButton } from "./CompleteTodoButton";
 import { timeAgo } from "@/utils/dates";
 import { UnCompleteTodoButton } from "./UnCompleteTodoButton";
+import { TodoItem } from "./TodoItem";
 
 export default async function Page() {
   const todos = await getTodos();
@@ -12,17 +12,8 @@ export default async function Page() {
   const todosJsx = (
     <ul>
       {todos?.map((todo) => (
-        <li key={todo.id} className="flex gap-9">
-          <div className="flex gap-4">
-            <button className="hover:opacity-75">✏️</button>
-            <CompleteTodoButton todoId={todo.id} />
-          </div>
-
-          <div className="opacity-50">
-            {timeAgo(todo.updated_at || todo.created_at)}
-          </div>
-
-          <div>{todo.title}</div>
+        <li key={todo.id}>
+          <TodoItem todo={todo} />
         </li>
       ))}
     </ul>

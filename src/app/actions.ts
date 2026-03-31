@@ -24,6 +24,34 @@ export const createTodo = async (prevState: any, formData: FormData) => {
   return { message: "Added todo!", resetForm: true };
 };
 
+export const updateTodo = async (
+  todoId: string,
+  prevState: any,
+  formData: FormData,
+) => {
+  // No type safety... ?
+  const title = formData.get("title");
+  // console.log(title);
+
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+  const updatedAt = new Date().toISOString();
+
+  const { error } = await supabase
+    .from("todos")
+    .update({ title, updated_at: updatedAt })
+    .eq("id", todoId);
+
+  if (error) {
+    console.error("Updating todo failed: ", error);
+    // again, no type safety?
+    return { message: "Error happened: " + error, resetForm: false };
+  }
+
+  revalidatePath("/");
+  return { message: "Updated todo!", resetForm: true };
+};
+
 export const getTodos = async () => {
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
