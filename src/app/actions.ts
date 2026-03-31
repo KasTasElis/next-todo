@@ -17,11 +17,11 @@ export const createTodo = async (prevState: any, formData: FormData) => {
   if (error) {
     console.error("Add todo failed: ", error);
     // again, no type safety?
-    return { message: "Error happened: " + error };
+    return { message: "Error happened: " + error, resetForm: false };
   }
 
   revalidatePath("/");
-  return { message: "Added todo!" };
+  return { message: "Added todo!", resetForm: true };
 };
 
 export const getTodos = async () => {

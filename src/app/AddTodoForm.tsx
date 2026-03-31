@@ -2,9 +2,11 @@
 
 import { useFormState, useFormStatus } from "react-dom";
 import { createTodo } from "./actions";
+import { useEffect, useRef } from "react";
 
 const initialState = {
   message: "",
+  resetForm: false,
 };
 
 const SubmitBtn = () => {
@@ -20,8 +22,16 @@ export const AddTodoForm = () => {
   // i could pass a reset callback
   const [state, formAction] = useFormState(createTodo, initialState);
 
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (state.resetForm) {
+      formRef.current?.reset();
+    }
+  }, [state]);
+
   return (
-    <form action={formAction}>
+    <form ref={formRef} action={formAction}>
       <input
         className="p-5 text-pink-900 w-[500px]"
         type="text"
