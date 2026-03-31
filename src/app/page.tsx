@@ -1,9 +1,11 @@
 import DeleteTodoButton from "./DeleteTodoButton";
 import { AddTodoForm } from "./AddTodoForm";
-import { getTodos } from "./actions";
+import { getCompletedTodos, getTodos } from "./actions";
+import { CompleteTodoButton } from "./CompleteTodoButton";
 
 export default async function Page() {
   const todos = await getTodos();
+  const completedTodos = await getCompletedTodos();
 
   const todosJsx = (
     <ul>
@@ -11,8 +13,24 @@ export default async function Page() {
         <li key={todo.id} className="flex gap-9">
           <div className="flex gap-4">
             <button className="hover:opacity-75">✏️</button>
+            <CompleteTodoButton todoId={todo.id} />
+          </div>
+
+          <div className="opacity-50">{todo.created_at}</div>
+
+          <div>{todo.title}</div>
+        </li>
+      ))}
+    </ul>
+  );
+
+  const completedTodosJsx = (
+    <ul>
+      {completedTodos?.map((todo) => (
+        <li key={todo.id} className="flex gap-9">
+          <div className="flex gap-4">
             <DeleteTodoButton todoId={todo.id} />
-            <button className="hover:opacity-75">✅</button>
+            <button className="hover:opacity-75">↩️</button>
           </div>
 
           <div className="opacity-50">{todo.created_at}</div>
@@ -37,20 +55,7 @@ export default async function Page() {
 
       <div className="p-7">
         <h3 className="text-xl mb-5">✅ Completed:</h3>
-        <ul>
-          {todos?.map((todo) => (
-            <li key={todo.id} className="flex gap-9">
-              <div className="flex gap-4">
-                <button className="hover:opacity-75">🗑️</button>
-                <button className="hover:opacity-75">↩️</button>
-              </div>
-
-              <div className="opacity-50">{todo.created_at}</div>
-
-              <div>{todo.title}</div>
-            </li>
-          ))}
-        </ul>
+        {completedTodos?.length ? completedTodosJsx : nothingToShowJsx}
       </div>
     </div>
   );
