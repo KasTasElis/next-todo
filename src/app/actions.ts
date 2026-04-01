@@ -12,7 +12,9 @@ const CreateTodoSchema = z.object({
 
 const getSupabase = () => createClient(cookies());
 
-const sortByTime = <T extends { updated_at: string | null; created_at: string }>(
+const sortByTime = <
+  T extends { updated_at: string | null; created_at: string },
+>(
   todos: T[] | null | undefined,
 ) =>
   todos?.sort(
@@ -28,9 +30,35 @@ const validateTodoTitle = (
   if (!parsed.success) {
     const tree = z.treeifyError(parsed.error);
     console.log("Error: ", tree.errors[0]);
-    return { ok: false, result: { message: "Zod validation error", resetForm: false } };
+    return {
+      ok: false,
+      result: { message: "Zod validation error", resetForm: false },
+    };
   }
   return { ok: true, title: parsed.data.title };
+};
+
+export const createTodoNew = async (title: string) => {
+  const parsed = CreateTodoSchema.safeParse({ title: 123 });
+  if (!parsed.success) {
+    console.error("ZOD validation failed:", parsed.error.issues[0].message);
+    return { error: "BE validation rejected entry." };
+  }
+
+  try {
+    const supabase = getSupabase();
+    const { error } = await supabase.from("todos").insert({ title });
+
+    if (error) {
+      console.error("Supabase insert failed:", error);
+      return { error: "Supabase rejected entry." };
+    }
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    return { error: "Something went wrong." };
+  }
+
+  revalidatePath("/");
 };
 
 export const createTodo = async (
@@ -41,7 +69,9 @@ export const createTodo = async (
   if (!validation.ok) return validation.result;
 
   const supabase = getSupabase();
-  const { error } = await supabase.from("todos").insert({ title: validation.title });
+  const { error } = await supabase
+    .from("todos")
+    .insert({ title: validation.title });
 
   if (error) {
     console.error("Add todo failed: ", error);
@@ -78,12 +108,18 @@ export const updateTodo = async (
 };
 
 export const getTodos = async () => {
-  const { data: todos } = await getSupabase().from("todos").select().eq("done", false);
+  const { data: todos } = await getSupabase()
+    .from("todos")
+    .select()
+    .eq("done", false);
   return sortByTime(todos);
 };
 
 export const getCompletedTodos = async () => {
-  const { data: todos } = await getSupabase().from("todos").select().eq("done", true);
+  const { data: todos } = await getSupabase()
+    .from("todos")
+    .select()
+    .eq("done", true);
   return sortByTime(todos);
 };
 

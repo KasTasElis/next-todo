@@ -1,4 +1,5 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

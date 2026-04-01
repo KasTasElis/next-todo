@@ -1,9 +1,9 @@
 import DeleteTodoButton from "./DeleteTodoButton";
-import { AddTodoForm } from "./AddTodoForm";
 import { getCompletedTodos, getTodos } from "./actions";
 import { timeAgo } from "@/utils/dates";
 import { UnCompleteTodoButton } from "./UnCompleteTodoButton";
 import { TodoItem } from "./TodoItem";
+import { AddTodoFormNew } from "./AddTodoFormNew";
 
 export default async function Page() {
   const todos = await getTodos();
@@ -43,7 +43,7 @@ export default async function Page() {
   return (
     <div>
       <div className="p-7">
-        <AddTodoForm />
+        <AddTodoFormNew />
       </div>
       <div className="p-7">
         <h3 className="text-xl mb-5">⏳ Todo:</h3>
