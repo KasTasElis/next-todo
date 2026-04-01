@@ -1,5 +1,6 @@
+import Image from "next/image";
 import DeleteTodoButton from "./DeleteTodoButton";
-import { getCompletedTodos, getTodos } from "./actions";
+import { getImage, getCompletedTodos, getTodos } from "./actions";
 import { timeAgo } from "@/utils/dates";
 import { UnCompleteTodoButton } from "./UnCompleteTodoButton";
 import { TodoItem } from "./TodoItem";
@@ -8,6 +9,9 @@ import { AddTodoFormNew } from "./AddTodoFormNew";
 export default async function Page() {
   const todos = await getTodos();
   const completedTodos = await getCompletedTodos();
+  const image = await getImage("goku.jpg");
+
+  console.log("IMG: ", image);
 
   const todosJsx = (
     <ul>
@@ -42,6 +46,10 @@ export default async function Page() {
 
   return (
     <div>
+      <div>
+        <div>Image: </div>
+        <Image src={image} alt="goku" width={300} height={300} />
+      </div>
       <div className="p-7">
         <AddTodoFormNew />
       </div>

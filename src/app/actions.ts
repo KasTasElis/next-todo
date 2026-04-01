@@ -145,3 +145,11 @@ export const deleteTodo = async (id: number) => {
 
   revalidatePath("/");
 };
+
+export const getImage = async (img: string) => {
+  const {
+    data: { publicUrl },
+  } = await getSupabase().storage.from("tasks").getPublicUrl(img);
+
+  return publicUrl;
+};
