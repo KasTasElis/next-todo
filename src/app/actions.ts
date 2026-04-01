@@ -3,16 +3,38 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { AddTodoActionState } from "./AddTodoForm";
+import * as z from "zod";
 
-export const createTodo = async (prevState: any, formData: FormData) => {
+const CreateTodoSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+});
+
+export const createTodo = async (
+  _prevState: AddTodoActionState,
+  formData: FormData,
+) => {
   // No type safety... ?
   const title = formData.get("title");
   console.log(title);
 
+  const parsed = CreateTodoSchema.safeParse({
+    title: formData.get("title"),
+  });
+
+  if (!parsed.success) {
+    const tree = z.treeifyError(parsed.error);
+
+    console.log("Error: ", tree.errors[0]);
+    return { message: "Zod validation error", resetForm: false };
+  }
+
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
 
-  const { error } = await supabase.from("todos").insert({ title });
+  const { error } = await supabase
+    .from("todos")
+    .insert({ title: parsed.data.title });
 
   if (error) {
     console.error("Add todo failed: ", error);
@@ -25,13 +47,20 @@ export const createTodo = async (prevState: any, formData: FormData) => {
 };
 
 export const updateTodo = async (
-  todoId: string,
-  prevState: any,
+  todoId: number,
+  _prevState: AddTodoActionState,
   formData: FormData,
 ) => {
-  // No type safety... ?
-  const title = formData.get("title");
-  // console.log(title);
+  const parsed = CreateTodoSchema.safeParse({
+    title: formData.get("title"),
+  });
+
+  if (!parsed.success) {
+    const tree = z.treeifyError(parsed.error);
+
+    console.log("Error: ", tree.errors[0]);
+    return { message: "Zod validation error", resetForm: false };
+  }
 
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
@@ -39,7 +68,7 @@ export const updateTodo = async (
 
   const { error } = await supabase
     .from("todos")
-    .update({ title, updated_at: updatedAt })
+    .update({ title: parsed.data.title, updated_at: updatedAt })
     .eq("id", todoId);
 
   if (error) {
@@ -84,7 +113,7 @@ export const getCompletedTodos = async () => {
   });
 };
 
-export const completeTodo = async (id: string) => {
+export const completeTodo = async (id: number) => {
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
   const updatedAt = new Date().toISOString();
@@ -101,7 +130,7 @@ export const completeTodo = async (id: string) => {
   revalidatePath("/");
 };
 
-export const unCompleteTodo = async (id: string) => {
+export const unCompleteTodo = async (id: number) => {
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
   const updatedAt = new Date().toISOString();
@@ -118,7 +147,7 @@ export const unCompleteTodo = async (id: string) => {
   revalidatePath("/");
 };
 
-export const deleteTodo = async (id: string) => {
+export const deleteTodo = async (id: number) => {
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
 

@@ -4,7 +4,12 @@ import { useFormState, useFormStatus } from "react-dom";
 import { createTodo } from "./actions";
 import { useEffect, useRef } from "react";
 
-const initialState = {
+export type AddTodoActionState = {
+  message: string;
+  resetForm: boolean;
+};
+
+const initialState: AddTodoActionState = {
   message: "",
   resetForm: false,
 };
@@ -36,7 +41,6 @@ export const AddTodoForm = () => {
         className="p-5 text-pink-900 w-[500px]"
         type="text"
         placeholder="What do i need to do? "
-        required
         name="title"
       />
       <SubmitBtn />
