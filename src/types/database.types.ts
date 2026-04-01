@@ -19,6 +19,7 @@ export type Database = {
           created_at: string
           done: boolean
           id: number
+          image_path: string | null
           title: string
           updated_at: string | null
         }
@@ -26,6 +27,7 @@ export type Database = {
           created_at?: string
           done?: boolean
           id?: number
+          image_path?: string | null
           title: string
           updated_at?: string | null
         }
@@ -33,6 +35,7 @@ export type Database = {
           created_at?: string
           done?: boolean
           id?: number
+          image_path?: string | null
           title?: string
           updated_at?: string | null
         }

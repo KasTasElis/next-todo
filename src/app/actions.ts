@@ -3,8 +3,9 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { AddTodoActionState } from "./AddTodoForm";
 import * as z from "zod";
+
+type AddTodoActionState = { message: string; resetForm: boolean };
 
 const CreateTodoSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -38,24 +39,36 @@ const validateTodoTitle = (
   return { ok: true, title: parsed.data.title };
 };
 
-export const createTodoNew = async (title: string) => {
-  const parsed = CreateTodoSchema.safeParse({ title: 123 });
+export const createTodoNew = async (formData: FormData) => {
+  const parsed = CreateTodoSchema.safeParse({ title: formData.get("title") });
   if (!parsed.success) {
     console.error("ZOD validation failed:", parsed.error.issues[0].message);
     return { error: "BE validation rejected entry." };
   }
 
-  try {
-    const supabase = getSupabase();
-    const { error } = await supabase.from("todos").insert({ title });
+  const supabase = getSupabase();
 
-    if (error) {
-      console.error("Supabase insert failed:", error);
-      return { error: "Supabase rejected entry." };
+  let imagePath: string | null = null;
+  const image = formData.get("image") as File | null;
+  if (image && image.size > 0) {
+    imagePath = `${Date.now()}-${image.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from("tasks")
+      .upload(imagePath, image);
+
+    if (uploadError) {
+      console.error("Image upload failed:", uploadError);
+      return { error: "Image upload failed." };
     }
-  } catch (err) {
-    console.error("Unexpected error:", err);
-    return { error: "Something went wrong." };
+  }
+
+  const { error } = await supabase
+    .from("todos")
+    .insert({ title: parsed.data.title, image_path: imagePath });
+
+  if (error) {
+    console.error("Supabase insert failed:", error);
+    return { error: "Supabase rejected entry." };
   }
 
   revalidatePath("/");

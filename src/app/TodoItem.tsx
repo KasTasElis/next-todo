@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { CompleteTodoButton } from "./CompleteTodoButton";
 import { timeAgo } from "@/utils/dates";
 import { useFormState } from "react-dom";
@@ -79,6 +80,15 @@ export const TodoItem = ({ todo }: { todo: Todo }) => {
           todo.title
         )}
       </div>
+
+      {todo.image_path && (
+        <Image
+          src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/tasks/${todo.image_path}`}
+          alt={todo.title}
+          width={100}
+          height={100}
+        />
+      )}
     </div>
   );
 };

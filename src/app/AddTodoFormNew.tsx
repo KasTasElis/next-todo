@@ -22,7 +22,11 @@ export const AddTodoFormNew = () => {
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     setIsLoading(true);
     setServerError("");
-    const result = await createTodoNew(data);
+
+    const formData = new FormData();
+    formData.append("title", data.title);
+    if (data.image?.[0]) formData.append("image", data.image[0]);
+    const result = await createTodoNew(formData);
     if (result?.error) {
       setServerError(result.error);
     } else {
