@@ -6,7 +6,18 @@ import { timeAgo } from "@/utils/dates";
 import { useFormState } from "react-dom";
 import { updateTodo } from "./actions";
 
-const EditTodoForm = ({ todo, onCancel, onSuccess }) => {
+import { Database } from "@/types/database.types";
+type Todo = Database["public"]["Tables"]["todos"]["Row"];
+
+const EditTodoForm = ({
+  todo,
+  onCancel,
+  onSuccess,
+}: {
+  todo: Todo;
+  onCancel: () => void;
+  onSuccess: () => void;
+}) => {
   const updateTodoWithId = updateTodo.bind(null, todo.id);
 
   const [state, formAction] = useFormState(updateTodoWithId, {
@@ -41,7 +52,7 @@ const EditTodoForm = ({ todo, onCancel, onSuccess }) => {
   );
 };
 
-export const TodoItem = ({ todo }) => {
+export const TodoItem = ({ todo }: { todo: Todo }) => {
   const [isEditing, setIsEditing] = useState(false);
 
   return (

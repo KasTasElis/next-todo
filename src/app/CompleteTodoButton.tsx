@@ -2,7 +2,7 @@
 
 import { completeTodo } from "./actions";
 
-export const CompleteTodoButton = ({ todoId }: { todoId: string }) => {
+export const CompleteTodoButton = ({ todoId }: { todoId: number }) => {
   return (
     <button onClick={() => completeTodo(todoId)} className="hover:opacity-75">
       ✅
