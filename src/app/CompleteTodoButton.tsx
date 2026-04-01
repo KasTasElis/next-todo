@@ -1,10 +1,10 @@
 "use client";
 
-import { completeTodo } from "./actions";
+import { setTodoDone } from "./actions";
 
 export const CompleteTodoButton = ({ todoId }: { todoId: number }) => {
   return (
-    <button onClick={() => completeTodo(todoId)} className="hover:opacity-75">
+    <button onClick={() => setTodoDone(todoId, true)} className="hover:opacity-75">
       ✅
     </button>
   );

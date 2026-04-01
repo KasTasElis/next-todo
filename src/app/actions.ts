@@ -10,35 +10,41 @@ const CreateTodoSchema = z.object({
   title: z.string().min(1, "Title is required"),
 });
 
+const getSupabase = () => createClient(cookies());
+
+const sortByTime = <T extends { updated_at: string | null; created_at: string }>(
+  todos: T[] | null | undefined,
+) =>
+  todos?.sort(
+    (a, b) =>
+      new Date(b.updated_at ?? b.created_at).getTime() -
+      new Date(a.updated_at ?? a.created_at).getTime(),
+  );
+
+const validateTodoTitle = (
+  formData: FormData,
+): { ok: true; title: string } | { ok: false; result: AddTodoActionState } => {
+  const parsed = CreateTodoSchema.safeParse({ title: formData.get("title") });
+  if (!parsed.success) {
+    const tree = z.treeifyError(parsed.error);
+    console.log("Error: ", tree.errors[0]);
+    return { ok: false, result: { message: "Zod validation error", resetForm: false } };
+  }
+  return { ok: true, title: parsed.data.title };
+};
+
 export const createTodo = async (
   _prevState: AddTodoActionState,
   formData: FormData,
 ) => {
-  // No type safety... ?
-  const title = formData.get("title");
-  console.log(title);
+  const validation = validateTodoTitle(formData);
+  if (!validation.ok) return validation.result;
 
-  const parsed = CreateTodoSchema.safeParse({
-    title: formData.get("title"),
-  });
-
-  if (!parsed.success) {
-    const tree = z.treeifyError(parsed.error);
-
-    console.log("Error: ", tree.errors[0]);
-    return { message: "Zod validation error", resetForm: false };
-  }
-
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-
-  const { error } = await supabase
-    .from("todos")
-    .insert({ title: parsed.data.title });
+  const supabase = getSupabase();
+  const { error } = await supabase.from("todos").insert({ title: validation.title });
 
   if (error) {
     console.error("Add todo failed: ", error);
-    // again, no type safety?
     return { message: "Error happened: " + error, resetForm: false };
   }
 
@@ -51,29 +57,19 @@ export const updateTodo = async (
   _prevState: AddTodoActionState,
   formData: FormData,
 ) => {
-  const parsed = CreateTodoSchema.safeParse({
-    title: formData.get("title"),
-  });
+  const validation = validateTodoTitle(formData);
+  if (!validation.ok) return validation.result;
 
-  if (!parsed.success) {
-    const tree = z.treeifyError(parsed.error);
-
-    console.log("Error: ", tree.errors[0]);
-    return { message: "Zod validation error", resetForm: false };
-  }
-
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = getSupabase();
   const updatedAt = new Date().toISOString();
 
   const { error } = await supabase
     .from("todos")
-    .update({ title: parsed.data.title, updated_at: updatedAt })
+    .update({ title: validation.title, updated_at: updatedAt })
     .eq("id", todoId);
 
   if (error) {
     console.error("Updating todo failed: ", error);
-    // again, no type safety?
     return { message: "Error happened: " + error, resetForm: false };
   }
 
@@ -82,76 +78,30 @@ export const updateTodo = async (
 };
 
 export const getTodos = async () => {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-
-  const { data: todos } = await supabase
-    .from("todos")
-    .select()
-    .eq("done", false);
-
-  return todos?.sort((a, b) => {
-    const aTime = new Date(a.updated_at ?? a.created_at).getTime();
-    const bTime = new Date(b.updated_at ?? b.created_at).getTime();
-    return bTime - aTime;
-  });
+  const { data: todos } = await getSupabase().from("todos").select().eq("done", false);
+  return sortByTime(todos);
 };
 
 export const getCompletedTodos = async () => {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-
-  const { data: todos } = await supabase
-    .from("todos")
-    .select()
-    .eq("done", true);
-
-  return todos?.sort((a, b) => {
-    const aTime = new Date(a.updated_at ?? a.created_at).getTime();
-    const bTime = new Date(b.updated_at ?? b.created_at).getTime();
-    return bTime - aTime;
-  });
+  const { data: todos } = await getSupabase().from("todos").select().eq("done", true);
+  return sortByTime(todos);
 };
 
-export const completeTodo = async (id: number) => {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-  const updatedAt = new Date().toISOString();
-
-  const { error } = await supabase
+export const setTodoDone = async (id: number, done: boolean) => {
+  const { error } = await getSupabase()
     .from("todos")
-    .update({ done: true, updated_at: updatedAt })
+    .update({ done, updated_at: new Date().toISOString() })
     .eq("id", id);
 
   if (error) {
-    console.error("Completing todo failed: ", error);
-  }
-
-  revalidatePath("/");
-};
-
-export const unCompleteTodo = async (id: number) => {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-  const updatedAt = new Date().toISOString();
-
-  const { error } = await supabase
-    .from("todos")
-    .update({ done: false, updated_at: updatedAt })
-    .eq("id", id);
-
-  if (error) {
-    console.error("Undoing todo failed: ", error);
+    console.error("Updating todo done state failed: ", error);
   }
 
   revalidatePath("/");
 };
 
 export const deleteTodo = async (id: number) => {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-
-  const { error } = await supabase.from("todos").delete().eq("id", id);
+  const { error } = await getSupabase().from("todos").delete().eq("id", id);
 
   if (error) {
     console.error("Delete todo failed: ", error);
