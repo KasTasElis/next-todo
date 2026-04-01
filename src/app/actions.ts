@@ -150,7 +150,26 @@ export const setTodoDone = async (id: number, done: boolean) => {
 };
 
 export const deleteTodo = async (id: number) => {
-  const { error } = await getSupabase().from("todos").delete().eq("id", id);
+  const supabase = getSupabase();
+
+  const { data: todo } = await supabase
+    .from("todos")
+    .select("image_path")
+    .eq("id", id)
+    .single();
+
+  if (todo?.image_path) {
+    const { data: removed, error: storageError } = await supabase.storage
+      .from("tasks")
+      .remove([todo.image_path]);
+
+    if (storageError || !removed?.length) {
+      console.error("Image delete failed: ", storageError ?? "file not removed");
+      return { error: "Failed to delete image." };
+    }
+  }
+
+  const { error } = await supabase.from("todos").delete().eq("id", id);
 
   if (error) {
     console.error("Delete todo failed: ", error);
