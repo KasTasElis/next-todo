@@ -13,6 +13,42 @@ const CreateTodoSchema = z.object({
 
 const getSupabase = () => createClient(cookies());
 
+export const getUser = async () => {
+  const { error, data } = await getSupabase().auth.getUser();
+
+  if (error) {
+    console.error("getUser Error: ", error);
+  } else {
+    console.log("getUser worked: ", data.user);
+  }
+};
+
+export const signUp = async () => {
+  const response = await getSupabase().auth.signUp({
+    email: "eli@email.com",
+    password: "Pass123!!!",
+  });
+
+  if (response.error) {
+    console.error("Sign up failed: ", response.error);
+  } else {
+    console.error("Sign up worked!:", response.data.user);
+  }
+};
+
+export const signIn = async () => {
+  const response = await getSupabase().auth.signInWithPassword({
+    email: "eli@email.com",
+    password: "Pass123!!!",
+  });
+
+  if (response.error) {
+    console.error("Sign in failed: ", response.error);
+  } else {
+    console.error("Sign in worked!:", response.data.user);
+  }
+};
+
 const sortByTime = <
   T extends { updated_at: string | null; created_at: string },
 >(
@@ -164,7 +200,10 @@ export const deleteTodo = async (id: number) => {
       .remove([todo.image_path]);
 
     if (storageError || !removed?.length) {
-      console.error("Image delete failed: ", storageError ?? "file not removed");
+      console.error(
+        "Image delete failed: ",
+        storageError ?? "file not removed",
+      );
       return { error: "Failed to delete image." };
     }
   }

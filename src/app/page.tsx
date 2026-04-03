@@ -1,13 +1,23 @@
 import DeleteTodoButton from "./DeleteTodoButton";
-import { getCompletedTodos, getTodos } from "./actions";
+import {
+  getCompletedTodos,
+  getTodos,
+  getUser,
+  signIn,
+  signUp,
+} from "./actions";
 import { timeAgo } from "@/utils/dates";
 import { UnCompleteTodoButton } from "./UnCompleteTodoButton";
 import { TodoItem } from "./TodoItem";
 import { AddTodoFormNew } from "./AddTodoFormNew";
+import { User } from "./User";
 
 export default async function Page() {
   const todos = await getTodos();
   const completedTodos = await getCompletedTodos();
+  //await getUser();
+  //await signUp();
+  //await signIn();
 
   const todosJsx = (
     <ul>
@@ -42,6 +52,7 @@ export default async function Page() {
 
   return (
     <div>
+      <User />
       <div className="p-7">
         <AddTodoFormNew />
       </div>
